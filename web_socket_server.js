@@ -17,7 +17,7 @@ wss.on("connection", (ws, socket) => {
     // sending message
     ws.on("message", data => {
         if (data == "create room") {
-            const room = new Room(player);
+            const room = new Room(player.id);
             rooms.push(room);
 
             wss.clients.forEach((client) => {
@@ -25,8 +25,8 @@ wss.on("connection", (ws, socket) => {
                 if (client == ws) {
                     if (client.readyState === WebSocketServer.OPEN) {
                         console.log("move user to waiting room...");
-                        console.log(JSON.stringify({roomInfo: [room]}));
-                        client.send(JSON.stringify({roomInfo: [room]}));
+                        console.log(JSON.stringify({roomInfo: room}));
+                        client.send(JSON.stringify({roomInfo: room}));
                     }
                 }
 
@@ -48,9 +48,9 @@ wss.on("connection", (ws, socket) => {
 
         if (data == "leave room") {
             const room = rooms.find((room) => {
-                return room.hasPlayer(player);
+                return room.hasPlayer(player.id);
             })
-            room.remove(player);
+            room.remove(player.id);
 
             if (room.shouldDestroy()) {
                 console.log("yes should destroy");
@@ -62,8 +62,8 @@ wss.on("connection", (ws, socket) => {
             wss.clients.forEach((client) => {
                 if (client == ws) {
                     if (client.readyState === WebSocketServer.OPEN) {
-                        console.log(JSON.stringify({roomInfo: [room]}));
-                        client.send(JSON.stringify({roomInfo: [room]}));
+                        console.log(JSON.stringify({roomInfo: room}));
+                        client.send(JSON.stringify({roomInfo: room}));
                     }
                 }
 
