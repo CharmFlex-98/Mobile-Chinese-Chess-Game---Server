@@ -10,7 +10,7 @@ let playersInLobby = [];
 // Creating connection using websocket
 wss.on("connection", (ws, socket) => {
     const userName = socket.headers.username;
-    const player = new Player(userName);
+    const player = new Player(userName, ws);
     playersInLobby.push(player);
     console.log(`${player.id} is connected!`);
 
@@ -25,7 +25,6 @@ wss.on("connection", (ws, socket) => {
                 if (client == ws) {
                     if (client.readyState === WebSocketServer.OPEN) {
                         console.log("move user to waiting room...");
-                        console.log(JSON.stringify({roomInfo: room}));
                         client.send(JSON.stringify({roomInfo: room}));
                     }
                 }
@@ -36,6 +35,29 @@ wss.on("connection", (ws, socket) => {
                     client.send(JSON.stringify({roomList: rooms}));
                 }
             })
+        }
+
+        if (data.includes("join")) {
+            console.log("someone joined");
+            const owner = data.toString().substring(data.indexOf(" ") + 1);
+            const joinedRoom = rooms.find((room) => {
+                return room.owner == owner;
+            });
+            if (joinedRoom == null) {} // return error
+
+            console.log("im here");
+            console.log(player.id);
+
+            joinedRoom.join(player.id);
+
+            let opponent = playersInLobby.find((player) => {
+                return player.id == owner;
+            });
+
+            if (opponent == null) {}// return error
+
+            ws.send(JSON.stringify({roomInfo: joinedRoom}));
+            opponent.socket.send(JSON.stringify({roomInfo: joinedRoom}));
         }
 
         if (data == "refresh lobby") {
